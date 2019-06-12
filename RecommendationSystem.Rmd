@@ -1,0 +1,211 @@
+---
+title: "Recommendation System"
+author: "Mathieu Klimczak"
+date: "12/06/2019"
+output:
+  pdf_document: 
+    toc: yes
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::read_chunk('Capstone2.R')
+library(dslabs)
+library(tidyverse)
+library(lubridate)
+```
+
+## Introduction
+
+First, let's import the datas and check their structures. Both datasets are the ones that can be downloaded from the following link
+
+https://drive.google.com/drive/folders/1IZcBBX0OmL9wu9AdzMBFUG8GoPbGQ38D
+
+```{r Import_Datas, tidy = T}
+
+```
+
+### Construction of the recommendation System
+
+The goal here is to build a recommendation system. That is, given the edx dataset which will serve as a train set, being able to construct a model which will rate movies based on different assumptions. 
+
+The metric we'll use to validate our recommendation system will be the Residual Mean Squared Errors metric given the following code.
+
+```{r Recommendation_system_RMSE}
+
+```
+
+We choose here to build a linear model. We'll first consider a "Naive approach" by adding biases one after another, then we'll consider regularization.
+
+We will concentrate ourselves to the users, movie, genres, and week (which will be constructed later) predictors to create this model.
+
+## Naive approach
+
+In a naive way of thinking, we'll consider first that our system gives the same note for any movies. That is, the mean of all the already known notes.
+
+```{r Naive_approach}
+
+```
+
+The prediction being the same for every movies, it's given by a column vector of dimension nrow(validation) with entires mu_hat.
+
+```{r Validation_Naive_approach_1}
+
+```
+
+
+This approach isn't the best. We are missing 1 point in the rating of the movies.
+
+```{r Validation_Naive_approach_2}
+
+```
+
+### Adding the Movie bias
+
+Let's consider there's a movie bias, some movies are considered good and will have a positive bias, others will a negative one. First let's see if this assumption is reflected on the train set.
+
+```{r Add_movie_bias} 
+
+```
+
+```{r Plot_movie_bias}
+
+```
+
+The distribution of this bias looks like a skewed Gaussian, in particular it's not constant, thus certain movies tend to be considered as good movies and have a positive bias, while others won't. We now implement this bias as a new variable of our model.
+
+
+```{r Validation_Movie_bias_approach_1}
+
+```
+The left join here is used to be sure that the validation dataset has the predictor b_m.
+
+
+
+Adding the movie bias as the b_m variable to our model improves the RMSE score, as we can see from the following computations.
+
+```{r Validation_Movie_bias_approach_2}
+
+```
+
+### Adding the User bias
+
+To further improves our model, we can now consider the user bias. Some users will like action movies and give them a higher rate, while others will prefer comedies, thus giving a smaller score on action movies than the first ones.
+
+This assumption about the user bias seems to be confirmed by the following plot, showing the distribution of the notes for users that have rated at least a hundred movies.
+
+
+```{r plot_User_bias}
+
+```
+
+Let's extract the user bias from our train set and implement it in our model as the b_u variable.
+
+```{r Add_User_bias}
+
+```
+
+Once again, adding this variable to our model has improved our RMSE score.
+```{r Validation_User_bias_approach, tidy = T}
+
+```
+
+
+### Adding the Genres bias
+
+As some genres might be more popular than other, they might tend to have better ratings. Let's just see here the average ratings of the genres having more than 35000 ratings.
+
+
+```{r Going_further_genres_bias}
+
+```
+
+Let's compute this genre bias.
+
+```{r Add_Genres_bias}
+
+```
+
+Although the other assumptions clearly improved the RMSE, adding gender bias did not improve the RMSE that much.
+
+```{r Validation_Genres_bias_approach}
+
+```
+
+### Adding the week bias
+
+We'll study here the effect of the week on the ratings of the movies. Before doing that, we had to our datasets, the required predictor.
+
+```{r Week_bias_add_predictor}
+
+```
+
+
+
+```{r Add_Week_bias}
+
+```
+
+Adding the week bias in our model gives us the following RMSE score.
+
+```{r Validation_Week_bias_approach}
+
+```
+
+## Regularization
+
+Up to now, we have considered every observations in the same way, whether it is a niche movie with few but excellent ratings, resulting in a high movie bias, or a Hollywood blockbuster movie with hundreds of ratings, some goods some bads, and thus with a mitigated movie bias.
+
+We'll try to overcome this problem by using regularization. Rather than taking the mean in our computations, we'll add a coefficient lambda in our denominators to try to the effect cause by the number of observations.
+
+We'll try several regularizations.
+
+
+### Movie + User Regularization 
+
+```{r Regularization_Movie_User}
+
+```
+
+### Movie + User + Genres Regularization 
+
+```{r Regularization_Movie_User_Genres}
+
+```
+
+### Movie + User + Genres + Week Regularization 
+
+```{r Regularization_Movie_User_Genres_Week}
+
+```
+
+
+## Results
+
+Here's the summarized results about the RMSE socres of the differents models.
+
+```{r Conclusion}
+
+```
+
+
+## Conclusion
+
+
+While the first two biases, movie and user, had an significant impact on the improvement of the RMSE, the genres and week bias, as they are right now, don't.
+
+Using regularization on the Movie+User model is at the same level that the model of all four biases. Thus we might discard the genres and week bias, and stick to the regularized Movie+User model.
+
+The last two regularied models did make an improvement of the RMSE score, but they are also more time and memory consuming regularized Movie+User model.
+
+A good trade-off choice would then be the regularized Movie+User model.
+
+
+
+
+
+
+
+
+
